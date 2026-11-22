@@ -1,18 +1,14 @@
-const fs = require('fs');
-const path = require('path');
+const Trip = require('../models/travlr');
 
-/* GET travel view using the Module Three development JSON data source. */
-const travel = (req, res, next) => {
+/* GET customer travel page from the live MongoDB trips collection. */
+const travel = async (req, res, next) => {
   try {
-    // Resolve from this module so startup is independent of the shell directory.
-    // Per the course guide, reload on each request for rapid prototyping.
-    const trips = JSON.parse(fs.readFileSync(
-      path.join(__dirname, '../../data/trips.json'), 'utf8'
-    ));
+    // lean() returns plain JavaScript objects suitable for HBS and JSON output.
+    const trips = await Trip.find({}).sort({ _id: 1 }).lean().exec();
     res.render('travel', { title: 'Travlr Getaways', isTravel: true, trips });
   } catch (err) {
+    err.status = 503;
     next(err);
   }
 };
-
 module.exports = { travel };

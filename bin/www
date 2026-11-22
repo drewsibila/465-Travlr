@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('465-travlr:server');
 var http = require('http');
+const { connectDatabase, disconnectDatabase } = require('../app_server/models/db');
 
 /**
  * Get port from environment and store in Express.
@@ -25,7 +26,35 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+// Start listening only after MongoDB is available.
+connectDatabase().then(() => server.listen(port)).catch(async err => {
+  console.error('Startup failed. Check that MongoDB is running:', err.message);
+  await disconnectDatabase();
+  process.exitCode = 1;
+});
+
+let stopping = false;
+async function shutdown(signal) {
+  if (stopping) return;
+  stopping = true;
+  console.log(`Stopping server (${signal})`);
+  const timeout = setTimeout(() => process.exit(1), 10000);
+  timeout.unref();
+  try {
+    if (server.listening) await new Promise((resolve, reject) =>
+      server.close(err => err ? reject(err) : resolve()));
+    await disconnectDatabase();
+    clearTimeout(timeout);
+    if (signal === 'SIGUSR2') process.kill(process.pid, 'SIGUSR2');
+    else process.exit(0);
+  } catch (err) {
+    console.error('Shutdown failed:', err.message);
+    process.exit(1);
+  }
+}
+process.once('SIGINT', () => shutdown('SIGINT'));
+process.once('SIGTERM', () => shutdown('SIGTERM'));
+process.once('SIGUSR2', () => shutdown('SIGUSR2'));
 server.on('error', onError);
 server.on('listening', onListening);
 

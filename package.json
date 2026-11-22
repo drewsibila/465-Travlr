@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "node test/rendering.js && node test/json-rendering.js"
+    "test": "node test/schema.js",
+    "seed": "node app_server/models/seed.js",
+    "verify": "node app_server/models/verify.js",
+    "test:db": "node test/database.js"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -12,6 +15,10 @@
     "express": "~4.16.1",
     "hbs": "~4.0.4",
     "http-errors": "~1.6.3",
+    "mongoose": "9.12.3",
     "morgan": "~1.9.1"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   }
 }

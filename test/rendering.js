@@ -1,7 +1,5 @@
 const assert = require('node:assert/strict');
-const app = require('../app');
-const server = app.listen(0, '127.0.0.1', async () => {
-  const origin = `http://127.0.0.1:${server.address().port}`;
+async function checkRendering(origin) {
   let checks = 0;
   try {
     for (const path of ['/', '/travel', '/travel/', '/rooms.html', '/meals.html', '/news.html', '/about.html', '/contact.html']) {
@@ -31,8 +29,7 @@ const server = app.listen(0, '127.0.0.1', async () => {
     assert((await missing.text()).includes('Not Found'));
     checks++;
     console.log(`PASS: ${checks} page, link, asset, and error checks.`);
-  } catch (error) {
-    console.error(error);
-    process.exitCode = 1;
-  } finally { server.close(); }
-});
+  } catch (error) { throw error; }
+}
+module.exports = { checkRendering };
+
